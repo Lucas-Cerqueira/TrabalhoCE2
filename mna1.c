@@ -67,7 +67,8 @@ numeroVariaveis, /* Numero de variaveis */
 numeroNos, /* Numero de nos */
 i,j,k,x,y,
 ponto,
-numeroPontos;
+numeroPontos,
+sistemaLinear;
 
 
 char
@@ -816,6 +817,7 @@ int main(void)
 	printf("   Joao Felipe Guedes\n");
 	denovo:
 	/* Leitura do netlist */
+	sistemaLinear = 1;
 	numeroElementos=0;
 	numeroVariaveis=0;
 	strcpy(lista[0],"0");
@@ -896,13 +898,14 @@ int main(void)
 
 		else if (tipo=='M')
 		{
+			sistemaLinear = 0;
+
 			char L[10], W[10];
 			//*Transistor MOS: M<nome> <nód> <nóg> <nós> <nób> <NMOS ou PMOS> L=<comprimento> W=<largura> <K> <Vt0> <lambda> <gama> <phi> <Ld>
 			sscanf(p,"%10s%10s%10s%10s%10s%10s%10s%lg%lg%lg%lg%lg%lg",na,nb,nc,nd,netlist[numeroElementos].nome1,
 										 	 	 	L, W, &netlist[numeroElementos].K,
 										            &netlist[numeroElementos].Vt0, &netlist[numeroElementos].lambda, &netlist[numeroElementos].gama,
 										            &netlist[numeroElementos].phi, &netlist[numeroElementos].Ld);
-
 
 			char *ptr;
 			char *token;
@@ -1030,20 +1033,16 @@ int main(void)
 
 	getch();
 
-	/////////////////
-	NewtonRaphsonPontoOp();
-	return 0;
-	////////////////
+	if (sistemaLinear == 1)
+	{
+		ZerarSistema();
 
-	/* Zera sistema */
-	ZerarSistema();
+		/* Monta estampas */
+		MontarEstampasPontoOp();
 
-	/* Monta estampas */
-	MontarEstampasPontoOp();
+		PrintarSistema(Yn);
 
-	PrintarSistema(Yn);
-
-	for (i=1; i<=numeroVariaveis; i++)
+		for (i=1; i<=numeroVariaveis; i++)
 		{
 			for (j=1; j<=numeroVariaveis+1; j++)
 				if (YnAnterior[i][j]!=0) printf("%+3.1f ",YnAnterior[i][j]);
@@ -1051,13 +1050,19 @@ int main(void)
 			printf("\n");
 		}
 
-	//return 1;
+		//return 1;
 
-	/* Resolve o sistema */
-	/*if (ResolverSistema())
+		/* Resolve o sistema */
+		if (ResolverSistema())
+		{
+			getch();
+			exit(1);
+		}
+	}
+	else
 	{
-		getch();
-		exit(1);
+		NewtonRaphsonPontoOp();
+		return 0;
 	}
 
 	#ifdef DEBUG
@@ -1067,7 +1072,7 @@ int main(void)
 		getch();
 	#endif
 
-	 Mostra solucao
+	//Mostra solucao
 	printf("Solucao:\n");
 	strcpy(txt,"Tensao");
 	for (i=1; i<=numeroVariaveis; i++)
@@ -1075,7 +1080,7 @@ int main(void)
 		if (i==numeroNos+1) strcpy(txt,"Corrente");
 		printf("%s %s: %g\n",txt,lista[i],Yn[i][numeroVariaveis+1]);
 	}
-	getch();*/
+	//getch();
 
 	nomeArquivoTab = strtok(nomeArquivo,".");
 	strcat (nomeArquivoTab,".tab");
@@ -1106,6 +1111,7 @@ int main(void)
 			//printf ("Omega = %g\n", omega);
 
 			ZerarSistemaComplexo();
+			//PegarPontoOp
 			MontarEstampasAnaliseFrequencia(omega);
 
 			if (ResolverSistemaComplexo())
@@ -1113,8 +1119,6 @@ int main(void)
 				getch();
 				exit(1);
 			}
-
-
 
 			/*
 		#ifdef DEBUG
@@ -1129,27 +1133,11 @@ int main(void)
 
 			//Mostra solucao
 			//printf("Solucao:\n");
-			strcpy(txt,"Tensao");
 			for (i=1; i<=numeroVariaveis; i++)
 			{
-				if (i==numeroNos+1)
-					strcpy(txt,"Corrente");
-				//printf("%s %s: %g+%gi\n",txt,lista[i], creal(YnComplex[i][numeroVariaveis+1]),cimag(YnComplex[i][numeroVariaveis+1]));
-
 				fprintf (arquivoTab, "%g %g ", cabs(YnComplex[i][numeroVariaveis+1]), carg(YnComplex[i][numeroVariaveis+1]));
 			}
 			fprintf(arquivoTab, "\n");
-			/*nomeArquivoTab = strtok(nomeArquivo,".");
-		strcat (nomeArquivoTab,".tab");
-		arquivoTab = fopen (nomeArquivoTab, "w");
-		if (arquivoTab==0)
-		{
-			printf("Falha ao criar arquivo %s\n",nomeArquivoTab);
-			exit (1);
-		}
-		fprintf (arquivoTab, "f 1m 1f 2m 2f\n");
-		fprintf (arquivoTab, "0.1 123 123 123 123\n");*/
-
 		}
 	}
 	else if (strcmp(tipoAC,"LIN") == 0)
@@ -1162,6 +1150,7 @@ int main(void)
 			omega = freqInicial*2*M_PI + ponto*deltaOmega;
 
 			ZerarSistemaComplexo();
+			//PegarPontoOp
 			MontarEstampasAnaliseFrequencia (omega);
 
 			if (ResolverSistemaComplexo())
@@ -1172,15 +1161,8 @@ int main(void)
 
 			fprintf (arquivoTab, "%g ", omega/(2*M_PI));
 
-			//Mostra solucao
-			//printf("Solucao:\n");
-			strcpy(txt,"Tensao");
 			for (i=1; i<=numeroVariaveis; i++)
 			{
-				if (i==numeroNos+1)
-					strcpy(txt,"Corrente");
-				//printf("%s %s: %g+%gi\n",txt,lista[i], creal(YnComplex[i][numeroVariaveis+1]),cimag(YnComplex[i][numeroVariaveis+1]));
-
 				fprintf (arquivoTab, "%g %g ", cabs(YnComplex[i][numeroVariaveis+1]), carg(YnComplex[i][numeroVariaveis+1]));
 			}
 			fprintf(arquivoTab, "\n");
