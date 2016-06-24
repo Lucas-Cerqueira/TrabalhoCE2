@@ -89,7 +89,7 @@ double
 g,
 Yn[MAX_NOS+1][MAX_NOS+2],
 YnAnterior[MAX_NOS+1][MAX_NOS+2],
-erros[MAX_NOS+1];
+erros[MAX_NOS+1],
 freqInicial,
 freqFinal,
 deltaOmega,
@@ -98,7 +98,7 @@ A, B;
 
 double complex
 gComplex,
-YnComplex[MAX_NOS+1][MAX_NOS+2];
+YnComplex[MAX_NOS+1][MAX_NOS+2],
 YnAnteriorComplex[MAX_NOS+1][MAX_NOS+2];
 
 /* Resolucao de sistema de equacoes lineares.
